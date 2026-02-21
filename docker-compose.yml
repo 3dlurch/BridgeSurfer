@@ -15,7 +15,7 @@ services:
     build: .
     container_name: bridgesurfer_app
     ports:
-      - "5000:5000"
+      - "5027:5000"
     volumes:
       - ./data.json:/app/data.json
       - ./backups:/app/backups
