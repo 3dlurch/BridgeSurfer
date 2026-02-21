@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  bridgesurfer:
+    build: .
+    container_name: bridgesurfer_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data.json:/app/data.json
+      - ./backups:/app/backups
+      - ./debug_log.txt:/app/debug_log.txt
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Einstellungen | BridgeSurfer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚙️%3C/text%3E%3C/svg%3E">
+    <style>
+        :root { --bg-color: #f5f5f7; --card-bg: #ffffff; --text-color: #1d1d1f; --text-secondary: #86868b; --accent-color: #0071e3; --radius: 18px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,0.04); padding: 40px; width: 100%; max-width: 500px; }
+        h1 { margin-top: 0; color: var(--text-color); font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+        .user-info { text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        h3 { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: var(--text-color); }
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 20px; }
+        input { width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 15px; box-sizing: border-box; background-color: #fafafa; color: var(--text-color); outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--accent-color); background-color: #fff; }
+        .btn { background-color: var(--accent-color); color: white; padding: 12px 24px; border-radius: 980px; text-decoration: none; font-size: 15px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; display: block; width: 100%; text-align: center; margin-top: 20px; box-sizing: border-box; }
+        .btn:hover { transform: scale(1.01); filter: brightness(1.1); }
+        .back-link { display: block; text-align: center; margin-top: 30px; color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; }
+        .back-link:hover { color: var(--text-color); }
+        .alert { padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 14px; font-weight: 500; }
+        .alert-success { background-color: #d1fae5; color: #065f46; } .alert-error { background-color: #fee2e2; color: #991b1b; } .alert-info { background-color: #dbeafe; color: #1e40af; }
+        hr { margin: 30px 0; border: 0; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>⚙️ Einstellungen</h1>
+        <div class="user-info">Benutzer: <b>{{ user.full_name }}</b> &nbsp;|&nbsp; Rolle: {{ user.role }}</div>
+        {% if msg %}<div class="alert alert-{{ msg_type }}">{{ msg }}</div>{% endif %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <h3>👤 Mein Profil</h3>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;"><label>Vorname</label><input type="text" name="vorname" value="{{ user.vorname }}" required></div>
+                <div style="flex: 1;"><label>Nachname</label><input type="text" name="nachname" value="{{ user.nachname }}" required></div>
+            </div>
+            <label>E-Mail Adresse</label>
+            <input type="email" name="email" value="{{ user.email or '' }}" placeholder="name@firma.de">
+            <button type="submit" class="btn">Profil speichern</button>
+        </form>
+        <hr>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <h3>🔑 Passwort ändern</h3>
+            <label>Neues Passwort</label>
+            <input type="password" name="pass1" placeholder="Neues Passwort" required>
+            <label>Wiederholen</label>
+            <input type="password" name="pass2" placeholder="Passwort wiederholen" required>
+            <button type="submit" class="btn">Passwort ändern</button>
+        </form>
+        <a href="/" class="back-link">← Zurück zum Dashboard</a>
+    </div>
+</body>
+</html>

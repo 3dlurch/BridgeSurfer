@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+
+# App-spezifisch
+*.db
+debug_log.txt
+instance/
+backups/
+data.json
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

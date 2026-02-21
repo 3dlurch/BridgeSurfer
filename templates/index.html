@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BridgeSurfer V3</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='BridgeSurfer_icon-64.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='BridgeSurfer_icon-128.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- FULLCALENDAR -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js'></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth', 
+          locale: 'de', 
+          events: '/api/kalender', 
+          contentHeight: 'auto', 
+          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+          buttonText: { today: 'Heute', month: 'Monat', list: 'Liste' }
+        });
+        calendar.render();
+
+        // --- BACKUP ERINNERUNG LOGIK ---
+        const today = new Date();
+        const dayOfMonth = today.getDate();
+        if (dayOfMonth >= 25) {
+            const reminders = document.querySelectorAll('.backup-reminder');
+            reminders.forEach(el => {
+                el.style.display = 'block';
+            });
+        }
+        
+        // --- JAHRESABSCHLUSS LOGIK (Nur im Dezember) ---
+        if (today.getMonth() === 11) { 
+            const dangerZone = document.getElementById('year-end-zone');
+            if (dangerZone) dangerZone.style.display = 'block';
+        }
+
+        // --- EASTER EGG: 4/20 ---
+        if (today.getMonth() === 3 && dayOfMonth === 20) {
+            document.documentElement.style.setProperty('--text-color', '#2e7d32');
+            document.documentElement.style.setProperty('--text-secondary', '#4caf50');
+            document.documentElement.style.setProperty('--accent-color', '#43a047');
+            const style = document.createElement('style');
+            style.innerHTML = 'h1, h2, h3, h4, .card-header { color: #2e7d32 !important; }';
+            document.head.appendChild(style);
+        }
+      });
+    </script>
+
+    <style>
+        /* --- BRIDGE SURFER DESIGN SYSTEM --- */
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-color: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent-color: #0071e3;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --nav-height: 52px;
+            --radius: 18px;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-top: var(--nav-height); 
+        }
+
+        /* --- KALENDER DESIGN ANPASSUNG --- */
+        #calendar { padding-bottom: 2px; font-family: inherit; }
+        .fc .fc-day-today { background-color: rgba(0, 113, 227, 0.1) !important; }
+        
+        /* Event Styling Pill Shape */
+        .fc-event {
+            border: none !important;
+            border-radius: 50px !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+            margin-bottom: 2px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.85em !important;
+            font-weight: 500;
+        }
+        .fc-daygrid-event-dot { display: none; }
+        
+        .fc .fc-button {
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 980px; 
+            padding: 8px 16px;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: capitalize;
+            box-shadow: none;
+        }
+        .fc .fc-button:hover { background-color: #0077ed; }
+        .fc .fc-button-primary:not(:disabled).fc-button-active, 
+        .fc .fc-button-primary:not(:disabled):active { background-color: #005bb5; }
+        .fc .fc-button:disabled { background-color: #d2d2d7; opacity: 1; }
+        .fc .fc-toolbar-title { font-size: 1.4em; font-weight: 700; color: var(--text-color); }
+        .fc-col-header-cell-cushion { color: var(--text-secondary); text-decoration: none; text-transform: uppercase; font-size: 12px; font-weight: 600; padding-top: 10px; padding-bottom: 10px; }
+        .fc-daygrid-day-number { color: var(--text-color); text-decoration: none; font-weight: 500; padding: 8px; }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #e5e5e5; }
+        .fc-theme-standard .fc-scrollgrid { border: 1px solid #e5e5e5; }
+
+        /* NAVIGATION */
+        nav { position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height); background: var(--glass-bg); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: center; }
+        .nav-content { width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 13px; font-weight: 500; }
+        .nav-logo { font-weight: 600; color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .nav-logo img { height: 28px; width: auto; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--accent-color); }
+
+        /* LAYOUT */
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; display: grid; grid-template-columns: 1fr; gap: 40px; }
+        @media (min-width: 900px) { .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; } .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; } }
+
+        /* CARDS */
+        .section-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: var(--text-color); }
+        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,0.04); padding: 30px; transition: transform 0.2s; }
+        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        /* HERO */
+        .hero { text-align: center; padding: 20px 0 40px 0; }
+        .hero-logo { width: 250px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        h1 { font-size: 42px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px 0; }
+        .hero-sub { font-size: 18px; color: var(--text-secondary); font-weight: 400; }
+
+        /* STATS */
+        .stats-container { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
+        .stat-val { font-size: 42px; font-weight: 700; display: block; }
+        .stat-label { font-size: 13px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* FORMS */
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 15px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 15px; box-sizing: border-box; background-color: #fafafa; color: var(--text-color); outline: none; transition: border-color 0.2s; }
+        input:focus, select:focus { border-color: var(--accent-color); background-color: #fff; }
+
+        /* BUTTONS */
+        .btn { background-color: var(--accent-color); color: white; padding: 12px 24px; border-radius: 980px; text-decoration: none; font-size: 15px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; display: inline-block; text-align: center; box-sizing: border-box; }
+        .btn:hover { background-color: #0077ed; transform: scale(1.01); }
+        .btn-full { width: 100%; margin-top: 20px; }
+        .btn-small { padding: 6px 14px; font-size: 13px; border-radius: 980px; margin: 2px; }
+        .btn-red { background-color: #ff3b30; }
+        .btn-dark { background-color: #1d1d1f; }
+        .btn-green { background-color: #34c759; }
+        .btn-orange { background-color: #ff9500; }
+
+        /* ALERTS */
+        .alert { padding: 15px; border-radius: 12px; margin-bottom: 30px; text-align: center; font-weight: 500; font-size: 14px; }
+        .alert-success { background-color: #d1fae5; color: #065f46; }
+        .alert-error { background-color: #fee2e2; color: #991b1b; }
+        .alert-info { background-color: #dbeafe; color: #1e40af; }
+        .backup-reminder { display: none; background-color: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; text-align: center; }
+
+        /* TABLES */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid #e5e5e5; }
+        td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+
+        /* BADGES */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white; display: inline-block; }
+        .bg-Urlaub { background-color: #34c759; } .bg-Homeoffice { background-color: #af52de; } .bg-Sonderurlaub { background-color: #ff2d55; } .bg-Krank { background-color: #ff3b30; } .bg-Wartend { background-color: #ff9500; }
+        .text-storno { color: #86868b; text-decoration: line-through; }
+
+        /* SECTIONS */
+        .admin-section { margin-top: 60px; padding-top: 40px; border-top: 1px solid #e5e5e5; }
+        .footer { text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #e5e5e5; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-content">
+            <a href="#home" class="nav-logo">
+                <img src="{{ url_for('static', filename='BridgeSurfer_Logo.png') }}" alt="Logo">
+            </a>
+            <div class="nav-links">
+                <a href="#home">Dashboard</a>
+                {% if user.role == 'Admin' %}<a href="#admin">Admin</a>{% endif %}
+                <a href="/settings">Profil</a>
+                <a href="/logout" style="color: #ff3b30;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" id="home">
+        
+        {% if msg %}<div class="alert alert-{{ msg_type }}">{{ msg }}</div>{% endif %}
+
+        <!-- HERO SECTION -->
+        <div class="hero">
+            <img src="{{ url_for('static', filename='BridgeSurfer_Logo.png') }}" alt="BridgeSurfer Logo" class="hero-logo">
+            <h1>Hallo, {{ user.full_name }}.</h1>
+            <p class="hero-sub">Willkommen zurück im BridgeSurfer.</p>
+            {% if user.role != 'Admin' %}
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-val" style="color: var(--accent-color);">{{ resturlaub }}</span>
+                    <span class="stat-label">Tage Verfügbar</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-val">{{ verbraucht }}</span>
+                    <span class="stat-label">Tage Genommen</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- DASHBOARD GRID -->
+        <div class="dashboard-grid">
+            
+            <!-- Linke Spalte: Neuer Antrag -->
+            <div>
+                <div class="section-title">Neuer Antrag</div>
+                <div class="card">
+                    <form action="/beantragen" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <label>Kategorie</label>
+                        <select name="kategorie" required>
+                            <option value="Urlaub">🏖️ Urlaub (Zieht Tage ab)</option>
+                            <option value="Homeoffice">🏠 Homeoffice (Neutral)</option>
+                            <option value="Sonderurlaub">🎉 Sonderurlaub (Neutral)</option>
+                        </select>
+
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex:1">
+                                <label>Von</label>
+                                <input type="date" name="start" required>
+                            </div>
+                            <div style="flex:1">
+                                <label>Bis</label>
+                                <input type="date" name="ende" required>
+                            </div>
+                        </div>
+                        
+                        <label>Bemerkung (Optional)</label>
+                        <input type="text" name="bemerkung" placeholder="z.B. Grund für Sonderurlaub">
+
+                        <button type="submit" class="btn btn-full btn-green">Antrag absenden</button>
+                    </form>
+                </div>
+
+                <!-- BUCHHALTUNG BOX -->
+                {% if user.role == 'Buchhaltung' %}
+                <div class="card" style="margin-top: 30px;">
+                    <div class="card-header">📊 Buchhaltung</div>
+                    
+                    {% if not backup_done %}
+                    <div class="backup-reminder">
+                        ⚠️ <strong>Monatsabschluss:</strong> Bitte denke daran, jetzt die Daten zu sichern!
+                    </div>
+                    {% endif %}
+
+                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+                        Exportiere die aktuellen Urlaubsdaten für die Lohnabrechnung.
+                    </p>
+                    <a href="/export" class="btn btn-green btn-full">
+                        📥 Excel Liste laden
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Rechte Spalte: Kalender -->
+            <div>
+                <div class="section-title">Team Kalender</div>
+                <div class="card">
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LISTE MEINER ANTRÄGE -->
+        <div style="margin-top: 40px;">
+            <div class="section-title">Übersicht</div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Mitarbeiter</th><th>Art</th><th>Zeitraum</th><th>Tage</th><th>Status</th>{% if user.role == 'Admin' %}<th>Aktion</th>{% endif %}</tr></thead>
+                    <tbody>
+                        {% for antrag in antraege %}
+                        <tr>
+                            <td style="font-weight: 500;">{{ antrag.name }}</td>
+                            <td>
+                                <span class="badge bg-{{ antrag.kategorie }}">{{ antrag.kategorie }}</span>
+                                {% if antrag.bemerkung %}<div style="font-size:11px; color:#888; margin-top:2px;">{{ antrag.bemerkung }}</div>{% endif %}
+                            </td>
+                            <td>
+                                {{ antrag.start }} <br>
+                                <span style="font-size: 12px; color: #888;">bis {{ antrag.ende }}</span>
+                            </td>
+                            <td>
+                                {{ antrag.tage_anzahl }}
+                                {% if (antrag.status == 'Wartend' or user.role == 'Admin') and antrag.kategorie == 'Urlaub' %}
+                                    <br><span style="font-size: 11px; color: var(--accent-color); font-weight:600;">(Rest: {{ antrag.user.resturlaub_wert }})</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if antrag.status == 'Genehmigt' %} <span style="color:#34c759; font-weight:600;">Genehmigt</span>
+                                {% elif antrag.status == 'Abgelehnt' %} <span class="text-storno">Abgelehnt</span>
+                                {% elif antrag.status == 'Storniert' %} <span class="text-storno">Storniert</span>
+                                {% elif antrag.status == 'Krank' %} <span style="color:#ff3b30; font-weight:600;">Krank</span>
+                                {% else %} <span style="color:#ff9500; font-weight:600;">Wartend</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- ADMIN AKTIONEN -->
+                            {% if user.role == 'Admin' %}
+                            <td>
+                                {% if antrag.status == 'Wartend' %}
+                                    <a href="/status/{{ antrag.id }}/Genehmigt" class="btn btn-small btn-green">✓</a>
+                                    <a href="/status/{{ antrag.id }}/Abgelehnt" class="btn btn-small btn-dark">✕</a>
+                                {% elif antrag.status == 'Genehmigt' %}
+                                    <a href="/admin/krank_melden_page/{{ antrag.id }}" class="btn btn-small btn-red" style="font-size:11px; padding:6px 10px;">KRANK</a>
+                                    <a href="/status/{{ antrag.id }}/Storniert" class="btn btn-small btn-dark" style="font-size:11px; padding:6px 10px;">STORNO</a>
+                                {% else %}
+                                    <span style="color:#ccc; font-size:12px;">-</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ADMIN BEREICH -->
+        {% if user.role == 'Admin' %}
+        <div class="admin-section" id="admin">
+            <div class="section-title">Admin Konsole</div>
+            
+            {% if not backup_done %}
+            <div class="backup-reminder" style="max-width: 600px; margin: 0 auto 30px auto;">
+                ⚠️ <strong>Monatsabschluss:</strong> Bitte denke daran, jetzt die Daten zu sichern!
+            </div>
+            {% endif %}
+            
+            <div class="admin-grid">
+                
+                <!-- Karte 1: Mitarbeiter -->
+                <div class="card">
+                    <div class="card-header">👥 Mitarbeiter Verwaltung</div>
+                    
+                    <form action="/user/create" method="POST" style="margin-bottom: 20px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="text" name="vorname" placeholder="Vorname" required style="margin:0; flex:1;">
+                            <input type="text" name="nachname" placeholder="Nachname" required style="margin:0; flex:1;">
+                            <input type="text" name="password" placeholder="PW" required style="margin:0; width: 60px;">
+                            <button type="submit" class="btn btn-small btn-blue" style="margin:0;">+</button>
+                        </div>
+                    </form>
+
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table style="font-size: 13px;">
+                            <thead><tr><th>Name</th><th>Rolle</th><th>Action</th></tr></thead>
+                            <tbody>
+                                {% for u in all_users %}{% if u.username != 'admin' %}
+                                <tr>
+                                    <td>{{ u.vorname }} {{ u.nachname }}<br><span style="font-size:11px; color:#888;">{{ u.jahresurlaub }}T Urlaub</span></td>
+                                    <td style="color:#666;">{{ u.role }}</td>
+                                    <td>
+                                        <a href="/admin/edit_user/{{ u.id }}" style="text-decoration:none;">✏️</a>&nbsp;
+                                        <a href="/user/delete/{{ u.id }}" onclick="return confirm('Löschen?');" style="text-decoration:none; color:red;">🗑️</a>
+                                    </td>
+                                </tr>
+                                {% endif %}{% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Karte 2: Tools & System -->
+                <div class="card">
+                    <div class="card-header">🔧 System Tools <span style="font-size:0.6em; color:#666; font-weight:normal;">(Periode: {{ current_period }})</span></div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        
+                        <!-- SMTP -->
+                        <a href="/admin/smtp_settings" class="btn btn-dark" style="text-align: left; display:flex; justify-content:space-between; box-sizing: border-box;">
+                            <span>📧 SMTP Konfiguration</span> <span>→</span>
+                        </a>
+
+                        <!-- BACKUP -->
+                        <a href="/admin/backup_local" class="btn btn-dark" style="text-align: left; display:flex; justify-content:space-between; box-sizing: border-box; background-color: #555;">
+                            <span>💾 Server-Backup erstellen</span> <span>→</span>
+                        </a>
+                        
+                        <!-- KONTEN-ÜBERSICHT -->
+                        <a href="/admin/export_balances" class="btn btn-green" style="text-align: left; display:flex; justify-content:space-between; box-sizing: border-box;">
+                            <span>📊 Konten-Übersicht (Bilanz)</span> <span>↓</span>
+                        </a>
+
+                        <!-- Excel Export -->
+                        <a href="/export" class="btn btn-green" style="text-align: left; display:flex; justify-content:space-between; box-sizing: border-box;">
+                            <span>📊 Excel Export (Alle)</span> <span>↓</span>
+                        </a>
+
+                        <hr style="border: 0; border-top: 1px solid #eee; margin: 5px 0;">
+
+                        <!-- Betriebsurlaub -->
+                        <div>
+                            <label style="margin-top:0;">🏭 Betriebsurlaub (Alle MA)</label>
+                            <form action="/admin/company_holiday" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div style="display: flex; gap: 5px;">
+                                    <div style="flex:1">
+                                        <input type="date" name="start" required style="width: 100%;">
+                                    </div>
+                                    <div style="flex:1">
+                                        <input type="date" name="ende" required style="width: 100%;">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-orange" style="width: 100%;">Setzen</button>
+                            </form>
+                        </div>
+                        
+                        <!-- JAHRESABSCHLUSS (DANGER ZONE) -->
+                        <div id="year-end-zone" style="display: none; margin-top: 20px; border-top: 2px solid #ff3b30; padding-top: 15px;">
+                            <h4 style="color: #ff3b30; margin: 0 0 10px 0;">⚠️ Danger Zone</h4>
+                            <p style="font-size: 12px; color: #ff3b30;">Nur im Dezember verfügbar.</p>
+                            <form action="/admin/close_year" method="POST" onsubmit="return confirm('Sicher? Das Jahr wird beendet, Resturlaub übertragen und eine neue Periode gestartet.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button class="btn btn-red" style="width: 100%;">🎆 Jahresabschluss durchführen</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Karte 3: Krankmeldung -->
+                <div class="card">
+                    <div class="card-header">🚑 Krankmeldung</div>
+                    <form action="/admin/create_entry" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <label>Mitarbeiter wählen</label>
+                        <select name="target_user_id">
+                            {% for u in all_users %}<option value="{{ u.id }}">{{ u.vorname }} {{ u.nachname }}</option>{% endfor %}
+                        </select>
+                        
+                        <div style="display: flex; gap: 5px; margin-top: 10px;">
+                            <input type="date" name="start" required>
+                            <input type="date" name="ende" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-red btn-full">Als KRANK eintragen</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <div class="footer">
+        <img src="{{ url_for('static', filename='BridgeSurfer_Logo.png') }}" alt="BridgeSurfer">
+        <p style="font-size: 12px; margin-top: 10px;">BridgeSurfer v3.0</p>
+    </div>
+
+    <!-- SCRIPT FÜR JAHRESABSCHLUSS BUTTON -->
+    <script>
+        const m = new Date().getMonth(); 
+        if (m === 11) { 
+            const zone = document.getElementById('year-end-zone');
+            if(zone) zone.style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BridgeSurfer Login</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='BridgeSurfer_icon-64.png') }}">
+    <style>
+        :root { --accent-color: #0071e3; --text-color: #1d1d1f; --text-secondary: #86868b; }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; background-color: #000; height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; }
+        #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .login-card { position: relative; z-index: 10; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 50px 40px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; width: 100%; max-width: 360px; border: 1px solid rgba(255, 255, 255, 0.5); animation: floatCard 6s ease-in-out infinite; }
+        @keyframes floatCard { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .logo { width: 180px; height: auto; margin-bottom: 20px; }
+        h1 { margin: 0 0 10px 0; font-size: 24px; color: var(--text-color); font-weight: 600; }
+        p { margin: 0 0 30px 0; color: var(--text-secondary); font-size: 14px; }
+        input { width: 100%; padding: 15px 20px; margin-bottom: 15px; border: 1px solid #d2d2d7; border-radius: 99px; font-size: 16px; background: rgba(255, 255, 255, 0.9); box-sizing: border-box; outline: none; transition: all 0.3s ease; text-align: center; }
+        input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); transform: scale(1.02); }
+        button { width: 100%; padding: 15px; background-color: var(--accent-color); color: white; border: none; border-radius: 99px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 10px; box-shadow: 0 5px 15px rgba(0, 113, 227, 0.3); }
+        button:hover { background-color: #005bb5; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4); }
+        .footer-link { display: block; margin-top: 20px; color: var(--text-secondary); font-size: 12px; text-decoration: none; }
+        .alert-error { background-color: #fee2e2; color: #991b1b; padding: 10px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; font-weight: 500; border: 1px solid #f87171; }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="login-card">
+        <img src="{{ url_for('static', filename='BridgeSurfer_Logo.png') }}" alt="BridgeSurfer" class="logo">
+        <h1>Willkommen zurück</h1>
+        {% if msg %}<div class="alert-error">{{ msg }}</div>{% else %}<p>Bitte melde dich an, um fortzufahren.</p>{% endif %}
+
+        <form action="/login" method="POST" autocomplete="off">
+            <!-- CSRF Token eingefügt -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <input type="text" style="display:none">
+            <input type="password" style="display:none">
+            <input type="text" name="username" placeholder="Benutzername" required autocomplete="off">
+            <input type="password" name="password" placeholder="Passwort" required autocomplete="new-password">
+            <button type="submit">Anmelden</button>
+        </form>
+        <a href="#" class="footer-link">BridgeSurfer v1.0</a>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('particle-canvas'); const ctx = canvas.getContext('2d');
+        let width, height; let particles = []; let mouse = { x: null, y: null };
+        const particleCount = 40; const mouseRepelDist = 150;
+        const wordConfig = [{ text: "Urlaub", color: "#34c759" }, { text: "Frei", color: "#60a5fa" }, { text: "Krank", color: "#ff3b30" }, { text: "Sonderurlaub", color: "#af52de" }, { text: "Betriebsurlaub", color: "#ff9500" }];
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        class Particle {
+            constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 1.0; this.vy = (Math.random() - 0.5) * 1.0; const choice = wordConfig[Math.floor(Math.random() * wordConfig.length)]; this.text = choice.text; this.color = choice.color; }
+            update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; if (mouse.x != null) { let dx = mouse.x - this.x; let dy = mouse.y - this.y; let distance = Math.sqrt(dx*dx + dy*dy); if (distance < mouseRepelDist) { const forceDirectionX = dx / distance; const forceDirectionY = dy / distance; const force = (mouseRepelDist - distance) / mouseRepelDist; this.x -= forceDirectionX * force * 3; this.y -= forceDirectionY * force * 3; } } }
+            draw() { ctx.font = "bold 13px -apple-system, sans-serif"; const textMetrics = ctx.measureText(this.text); const rectWidth = textMetrics.width + 28; ctx.beginPath(); if (ctx.roundRect) { ctx.roundRect(this.x - rectWidth/2, this.y - 13, rectWidth, 26, 50); } else { ctx.rect(this.x - rectWidth/2, this.y - 13, rectWidth, 26); } ctx.fillStyle = this.color; ctx.shadowBlur = 10; ctx.shadowColor = this.color; ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = "#ffffff"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(this.text, this.x, this.y + 1); }
+        }
+        function init() { particles = []; for (let i = 0; i < particleCount; i++) particles.push(new Particle()); }
+        function animate() { ctx.fillStyle = 'rgba(240, 242, 245, 0.3)'; ctx.clearRect(0,0, width, height); const gradient = ctx.createLinearGradient(0, 0, width, height); gradient.addColorStop(0, '#e0f2fe'); gradient.addColorStop(1, '#f0fdf4'); ctx.fillStyle = gradient; ctx.fillRect(0,0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        window.addEventListener('resize', () => { resize(); init(); }); window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; }); window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+        resize(); init(); animate();
+    </script>
+</body>
+</html>

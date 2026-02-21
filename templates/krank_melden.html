@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Krankmeldung erfassen | BridgeSurfer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚑%3C/text%3E%3C/svg%3E">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f5f7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #1d1d1f; margin-top: 0; }
+        p { color: #86868b; line-height: 1.5; }
+        .date-box { background: #f0f0f0; padding: 10px; border-radius: 8px; font-weight: bold; margin: 20px 0; color: #333; }
+        label { display: block; text-align: left; font-size: 12px; font-weight: bold; text-transform: uppercase; color: #86868b; margin-top: 20px; margin-bottom: 5px; }
+        input[type="date"] { width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+        .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 50px; font-size: 16px; font-weight: 500; cursor: pointer; margin-top: 20px; transition: transform 0.1s; }
+        .btn:hover { transform: scale(1.02); }
+        .btn-red { background-color: #ff3b30; color: white; }
+        .btn-cancel { background-color: transparent; color: #86868b; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚑 Krankmeldung im Urlaub</h2>
+        <p>Du bearbeitest den Urlaub von <strong>{{ antrag.name }}</strong>.</p>
+        <div class="date-box">Geplanter Urlaub:<br>{{ antrag.start }} bis {{ antrag.ende }}</div>
+        <p style="font-size: 14px;">Gib den Zeitraum der Krankheit an.<br>Der Urlaub wird entsprechend gekürzt oder gesplittet.</p>
+        <form action="/admin/process_krank_split" method="POST">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="antrag_id" value="{{ antrag.id }}">
+            <div style="display: flex; gap: 10px; text-align: left;">
+                <div style="flex:1"><label>Krank von:</label><input type="date" name="krank_start" value="{{ antrag.start }}" min="{{ antrag.start }}" max="{{ antrag.ende }}" required></div>
+                <div style="flex:1"><label>Krank bis:</label><input type="date" name="krank_ende" value="{{ antrag.ende }}" min="{{ antrag.start }}" max="{{ antrag.ende }}" required></div>
+            </div>
+            <button type="submit" class="btn btn-red">Krankmeldung speichern</button>
+            <a href="/" class="btn btn-cancel" style="text-decoration: none; display: inline-block;">Abbrechen</a>
+        </form>
+    </div>
+</body>
+</html>

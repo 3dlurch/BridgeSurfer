@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SMTP Konfiguration | BridgeSurfer</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='BridgeSurfer_icon-64.png') }}">
+    <style>
+        :root { --bg-color: #f5f5f7; --card-bg: #ffffff; --text-color: #1d1d1f; --text-secondary: #86868b; --accent-color: #0071e3; --radius: 18px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 4px 20px rgba(0,0,0,0.04); padding: 40px; width: 100%; max-width: 600px; }
+        h2 { margin-top: 0; color: var(--text-color); font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 10px; }
+        p.intro { text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 20px; }
+        input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 15px; box-sizing: border-box; background-color: #fafafa; color: var(--text-color); outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--accent-color); background-color: #fff; }
+        .hint { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+        .checkbox-group { margin-top: 25px; display: flex; align-items: center; gap: 10px; }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); margin: 0; }
+        .checkbox-label { margin: 0; text-transform: none; font-size: 15px; color: var(--text-color); font-weight: normal; letter-spacing: normal; }
+        .btn { background-color: var(--accent-color); color: white; padding: 14px 28px; border-radius: 980px; text-decoration: none; font-size: 16px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; display: block; width: 100%; text-align: center; margin-top: 30px; box-sizing: border-box; }
+        .btn:hover { transform: scale(1.01); filter: brightness(1.1); }
+        .btn-green { background-color: #34c759; }
+        .back-link { display: block; text-align: center; margin-top: 30px; color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; }
+        .back-link:hover { color: var(--text-color); }
+        .section-divider { margin: 40px 0 20px 0; border-top: 2px dashed #eee; position: relative; }
+        .section-divider span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--card-bg); padding: 0 10px; font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🔧 System Konfiguration</h2>
+        <p class="intro">E-Mail Server & Automatisierung</p>
+        <form method="POST">
+            <!-- WICHTIG: CSRF TOKEN MUSS HIER STEHEN -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+            <label>SMTP Server</label>
+            <input type="text" name="server" value="{{ s.get('mail_server', '') }}" placeholder="z.B. smtp.ionos.de">
+            <label>Port</label>
+            <input type="number" name="port" value="{{ s.get('mail_port', '587') }}" placeholder="587">
+            <label>Benutzername (Login-E-Mail)</label>
+            <input type="text" name="username" value="{{ s.get('mail_username', '') }}">
+            <label>Passwort</label>
+            <input type="password" name="password" placeholder="Neues Passwort eingeben zum Ändern...">
+            <div class="hint">Das aktuelle Passwort wird aus Sicherheitsgründen ausgeblendet.</div>
+            <label>Absender E-Mail</label>
+            <input type="text" name="sender_mail" value="{{ s.get('mail_sender_mail', '') }}" placeholder="Wie Empfänger sie sehen">
+            <div class="checkbox-group">
+                <input type="checkbox" name="use_tls" id="tls" {% if s.get('mail_use_tls') == True %}checked{% endif %}>
+                <label for="tls" class="checkbox-label">TLS Verschlüsselung nutzen</label>
+            </div>
+            <label>Interne Adresse (für Links in Mails)</label>
+            <input type="text" name="app_host_url" value="{{ s.get('app_host_url', '') }}" placeholder="Leer lassen für automatische Erkennung">
+            <div class="hint">Z.B. http://192.168.178.20:5000 (Optional)</div>
+            <div class="section-divider"><span>AUTOMATISIERUNG</span></div>
+            <label>Backup Token (für Cronjobs / Taskplaner)</label>
+            <input type="text" name="backup_token" value="{{ s.get('backup_token', '') }}" placeholder="z.B. GeheimesWort123">
+            <div class="hint">Aufrufbar via: http://DEINE-IP:5000/api/trigger_backup?token=DEIN_TOKEN</div>
+            <button type="submit" class="btn btn-green">Einstellungen speichern</button>
+        </form>
+        <a href="/" class="back-link">← Zurück zum Dashboard</a>
+    </div>
+</body>
+</html>
