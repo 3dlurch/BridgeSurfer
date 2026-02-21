@@ -1,3 +1,13 @@
+################################################################
+# Projekt: BridgeSurfer
+# Autor: Emanuel Vogt
+# Organisation: 8gent.Harness
+# Erstellt am: 2026-02-21
+# Beschreibung: Docker-Konfiguration für die BridgeSurfer App
+# Lizenz: Alle Rechte vorbehalten
+# Status: In Entwicklung
+################################################################
+
 FROM python:3.11-slim
 
 WORKDIR /app

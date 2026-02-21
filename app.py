@@ -1,3 +1,13 @@
+################################################################
+# Projekt: BridgeSurfer
+# Autor: Emanuel Vogt
+# Organisation: 8gent.Harness
+# Erstellt am: 2026-02-21
+# Beschreibung: Hauptanwendung für den BridgeSurfer Urlaubsplaner (JSON-basiert)
+# Lizenz: Alle Rechte vorbehalten
+# Status: In Entwicklung
+################################################################
+
 import os
 import sys
 import io
